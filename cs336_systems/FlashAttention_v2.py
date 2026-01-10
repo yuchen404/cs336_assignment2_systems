@@ -392,12 +392,42 @@ class FlashAttention2Forward_triton(torch.autograd.Function):
         L = L.view(*prefix, seq_len)
         # save for backward
         ctx.save_for_backward(Q, K, V, O, L)
+        ctx.is_causal = is_causal
 
         return O
     
     @staticmethod
     def backward(ctx, dO):
-        raise NotImplementedError("FlashAttention2Forward_triton backward is not implemented yet.")
+        """
+        Backward pass for FlashAttention-2 using PyTorch operations.
+        dO: (..., seq_len, d_model) gradient of output O
+        Q, K, V, O are retrieved from ctx (..., seq_len, d_model)
+        L: (..., seq_len) logsumexp for each query position, L_i = logsumexp_j(Q_i . K_j^T)
+        scale: float 1/sqrt(d_model)
+        is_causal: bool
+        returns:
+        dQ, dK, dV: gradients w.r.t. Q, K, V
+        """
+        Q, K, V, O, L = ctx.saved_tensors
+        is_causal = ctx.is_causal
+
+        in_dtype = Q.dtype
+
+        Qf = Q.to(torch.float32)
+        Kf = K.to(torch.float32)
+        Vf = V.to(torch.float32)
+        Of = O.to(torch.float32)
+        dOf = dO.to(torch.float32)
+
+        if is_causal:
+            flash_bwd_complied = _flash_bwd_causal(Qf, Kf, Vf, Of, L, dOf)
+        else:
+            flash_bwd_complied = _flash_bwd_nocausal(Qf, Kf, Vf, Of, L, dOf)
+
+        dQ, dK, dV = flash_bwd_complied
+
+        return dQ, dK, dV, None
+        # raise NotImplementedError("FlashAttention2Forward_triton backward is not implemented yet.")
 
         
 
