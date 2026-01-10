@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Type
 
 import torch
-
+from cs336_systems.FlashAttention_v2 import FlashAttention2Forward_pytorch, FlashAttention2Forward_triton
 
 
 def get_flashattention_autograd_function_pytorch() -> Type:
@@ -16,7 +16,9 @@ def get_flashattention_autograd_function_pytorch() -> Type:
         A class object (not an instance of the class)
     """
     # For example: return MyFlashAttnAutogradFunctionClass
-    raise NotImplementedError
+    # raise NotImplementedError
+    return FlashAttention2Forward_pytorch
+
 
 
 def get_flashattention_autograd_function_triton() -> Type:
@@ -32,7 +34,8 @@ def get_flashattention_autograd_function_triton() -> Type:
         A class object (not an instance of the class)
     """
     # For example: return MyTritonFlashAttentionAutogradFunctionClass
-    raise NotImplementedError
+    # raise NotImplementedError
+    return FlashAttention2Forward_triton
 
 
 def get_ddp_individual_parameters(module: torch.nn.Module) -> torch.nn.Module:
