@@ -1,3 +1,0 @@
-submitit INFO (2026-01-03 16:12:14,151) - Starting with JobEnvironment(job_id=278783, hostname=lc-SA5212M5, local_rank=0(1), node=0(1), global_rank=0(1))
-submitit INFO (2026-01-03 16:12:14,217) - Loading pickle: /home/zhwong/workspace/LMfromScratch/assignment2-systems/slurm_logs/278783_submitted.pkl
-submitit ERROR (2026-01-03 16:22:20,217) - Submitted job triggered an exception

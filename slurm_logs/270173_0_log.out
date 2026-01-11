@@ -1,5 +1,0 @@
-submitit INFO (2026-01-03 16:12:00,922) - Starting with JobEnvironment(job_id=270173, hostname=lc-SA5212M5, local_rank=0(1), node=0(1), global_rank=0(1))
-submitit INFO (2026-01-03 16:12:00,922) - Loading pickle: /home/zhwong/workspace/LMfromScratch/assignment2-systems/slurm_logs/270173_submitted.pkl
-submitit WARNING (2026-01-03 18:00:33,555) - Bypassing signal SIGTERM
-submitit WARNING (2026-01-03 18:00:33,562) - Bypassing signal SIGTERM
-submitit ERROR (2026-01-03 18:00:34,122) - Submitted job triggered an exception
