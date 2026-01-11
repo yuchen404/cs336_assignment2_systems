@@ -68,12 +68,12 @@ def benchmark_one_case(seq_len, d_model, dtype):
     def flash_bwd():
         zero_grads(Q, K, V)
         out = flash_attention(Q, K, V, is_causal)
-        out.backward(dO)
+        out.backward(dO)    # type: ignore
 
     def flash_fwd_bwd():
         zero_grads(Q, K, V)
         out = flash_attention(Q, K, V, is_causal)
-        out.backward(dO)
+        out.backward(dO)    # type: ignore
 
     # Warm-up
     for _ in range(5):
@@ -82,18 +82,18 @@ def benchmark_one_case(seq_len, d_model, dtype):
     torch.cuda.synchronize()
 
     # Benchmark
-    pytorch_fwd_time = tt.do_bench(pytorch_fwd) # ms
+    pytorch_fwd_time = tt.do_bench(pytorch_fwd, rep=5) # ms
     torch.cuda.synchronize()
-    pytorch_bwd_time = tt.do_bench(pytorch_bwd) # ms
+    pytorch_bwd_time = tt.do_bench(pytorch_bwd, rep=5) # ms
     torch.cuda.synchronize()
-    pytorch_fwd_bwd_time = tt.do_bench(pytorch_fwd_bwd) # ms
+    pytorch_fwd_bwd_time = tt.do_bench(pytorch_fwd_bwd, rep=5) # ms
     torch.cuda.synchronize()
 
-    flash_fwd_time = tt.do_bench(flash_fwd) # ms
+    flash_fwd_time = tt.do_bench(flash_fwd, rep=5) # ms
     torch.cuda.synchronize()
-    flash_bwd_time = tt.do_bench(flash_bwd) # ms
+    flash_bwd_time = tt.do_bench(flash_bwd, rep=5) # ms
     torch.cuda.synchronize()
-    flash_fwd_bwd_time = tt.do_bench(flash_fwd_bwd) # ms
+    flash_fwd_bwd_time = tt.do_bench(flash_fwd_bwd, rep=5) # ms
     torch.cuda.synchronize()
 
     return {
