@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"    # Adjust as needed
 
 import torch
 import torch.distributed as dist
@@ -165,12 +165,12 @@ def worker(rank: int, world_size: int, backend: str, master_addr: str, master_po
                 })
             # Save to CSV
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_rank_csv = f"results/allreduce_benchmark_rank_{backend}_ws{world_size}_{timestamp}.csv"
-            output_rank_md = f"results/allreduce_benchmark_rank_{backend}_ws{world_size}_{timestamp}.md"
+            output_rank_csv = f"results/benchmark_allreduce/allreduce_benchmark_rank_{backend}_ws{world_size}_{timestamp}.csv"
+            output_rank_md = f"results/benchmark_allreduce/allreduce_benchmark_rank_{backend}_ws{world_size}_{timestamp}.md"
             write_csv(output_rank_csv, output_rank_md, all_records)
             # Save aggregated
-            output_agg_csv = f"results/allreduce_benchmark_agg_{backend}_ws{world_size}_{timestamp}.csv"
-            output_agg_md = f"results/allreduce_benchmark_agg_{backend}_ws{world_size}_{timestamp}.md"
+            output_agg_csv = f"results/benchmark_allreduce/allreduce_benchmark_agg_{backend}_ws{world_size}_{timestamp}.csv"
+            output_agg_md = f"results/benchmark_allreduce/allreduce_benchmark_agg_{backend}_ws{world_size}_{timestamp}.md"
             write_csv(output_agg_csv, output_agg_md, aggregated_results)
 
     finally:
@@ -189,11 +189,11 @@ def write_csv(path_csv: str, path_md: str, rows: List[Dict[str, Any]]) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Benchmark All-Reduce Operation")
-    parser.add_argument("--world_size", type=int, default=2, help="Number of processes (world size)")
+    parser.add_argument("--world_size", type=int, default=6, help="Number of processes (world size)")
     parser.add_argument("--backend", type=str, choices=["gloo", "nccl"], default="gloo", help="Distributed backend to use")
     parser.add_argument("--master_addr", type=str, default="localhost", help="Master address for distributed setup")
     parser.add_argument("--master_port", type=str, default="29500", help="Master port for distributed setup")
-    parser.add_argument("--sizes_mb", type=int, nargs="+", default=[1, 10, 100], help="List of tensor sizes in MB to benchmark")
+    parser.add_argument("--sizes_mb", type=int, nargs="+", default=[1, 10, 100, 1000], help="List of tensor sizes in MB to benchmark")
     parser.add_argument("--warmup", type=int, default=5, help="Number of warm-up iterations")
     parser.add_argument("--iters", type=int, default=None, help="Number of benchmark iterations (auto if not set)")
     return parser.parse_args()
