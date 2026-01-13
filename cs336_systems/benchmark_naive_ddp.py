@@ -14,6 +14,7 @@ from typing import Iterable, Set, Tuple, List, Dict, Any
 from cs336_systems.ddp_utils import (
     get_ddp_individual_parameters,
     ddp_individual_parameters_on_after_backward,
+    ddp_flattened_parameters_on_after_backward,
 )
 from cs336_basics.optimizer import AdamW
 from cs336_basics.nn_utils import cross_entropy
@@ -29,7 +30,7 @@ def cuda_sync_if_needed(device: torch.device) -> None:
 def setup_process_group(rank: int, world_size: int, backend: str, master_addr: str, master_port: str) -> None:
     os.environ["MASTER_ADDR"] = master_addr
     os.environ["MASTER_PORT"] = master_port
-    dist.init_process_group(backend=backend, rank=rank, world_size=world_size)
+    dist.init_process_group(backend=backend, rank=rank, world_size=world_size, device_id=torch.device("cuda", rank))
 
 def teardown_process_group() -> None:
     if dist.is_initialized():
@@ -38,7 +39,7 @@ def teardown_process_group() -> None:
 # ===================
 # DDP Training Function
 # ===================
-def train_ddp_naive(model: nn.Module, optimizer: torch.optim.Optimizer, input_x, target_y, device: torch.device):
+def train_ddp_naive(model: nn.Module, optimizer: torch.optim.Optimizer, input_x, target_y, device: torch.device, sync_grads_fn):
     model.train()
     cuda_sync_if_needed(device)
 
@@ -56,7 +57,8 @@ def train_ddp_naive(model: nn.Module, optimizer: torch.optim.Optimizer, input_x,
     cuda_sync_if_needed(device)
     comm_s = timer()
 
-    ddp_individual_parameters_on_after_backward(model)
+    # ddp_individual_parameters_on_after_backward(model)
+    sync_grads_fn(model)
 
     cuda_sync_if_needed(device)
     comm_e = timer()
@@ -83,11 +85,12 @@ def worker(
     dtype_str: str,
     warmup_steps: int,
     measure_steps: int,
+    mode: str,  # "flat" or "indiv"
     ) -> None:
     # --- setup process group ---
+    torch.cuda.set_device(rank)
     setup_process_group(rank, world_size, backend, master_addr, master_port)
 
-    torch.cuda.set_device(rank)
     device = torch.device("cuda", rank)
     device_str = f"cuda:{rank}"
 
@@ -120,7 +123,14 @@ def worker(
     ddp_model = get_ddp_individual_parameters(model, src=0)
     dist.barrier()
 
-    g = torch.Generator().manual_seed(42)
+    if mode == "flat":
+        print(f"Rank {rank}: Using flattened DDP gradient synchronization")
+        sync_grads_fn = ddp_flattened_parameters_on_after_backward
+    else:
+        print(f"Rank {rank}: Using individual DDP gradient synchronization")
+        sync_grads_fn = ddp_individual_parameters_on_after_backward
+
+    g = torch.Generator().manual_seed(42 + rank)
     data_random = torch.randint(0, vocab_size, (1 << 12, ), generator=g).numpy()
 
     # --- warmup ---
@@ -132,7 +142,7 @@ def worker(
             context_length=context_length,
             device=device_str,
         )
-        _ = train_ddp_naive(ddp_model, optimizer, input_x, target_y, device)
+        _ = train_ddp_naive(ddp_model, optimizer, input_x, target_y, device, sync_grads_fn)
     dist.barrier()
 
     # --- measurement ---
@@ -144,30 +154,44 @@ def worker(
             context_length=context_length,
             device=device_str,
         )
-        step_time, comm_time = train_ddp_naive(ddp_model, optimizer, input_x, target_y, device)
-        per_step_times.append({"step_time": step_time, "comm_time": comm_time, "backend": backend})
+        step_time, comm_time = train_ddp_naive(ddp_model, optimizer, input_x, target_y, device, sync_grads_fn)
+        per_step_times.append({"rank": rank,"step_time": step_time, "comm_time": comm_time, "backend": backend})
 
     # --- gather times results to rank 0---
-    gathered_times: List[List[Dict[str, float]]] = [None for _ in range(world_size)]
+    gathered_times: List[List[Dict[str, float]]] = [None for _ in range(world_size)]    # type: ignore
     dist.all_gather_object(gathered_times, per_step_times)
 
     if rank == 0:
         # per rank results
         all_ranks_times: List[Dict[str, float]] = []
         all_ranks_times = [item for rank_rec in gathered_times for item in rank_rec]
+        step_avg_total = []
+        step_avg_comm = []
 
+        for s in range(measure_steps):
+            totals = [gathered_times[rank][s]["step_time"] for rank in range(world_size)]
+            comms = [gathered_times[rank][s]["comm_time"] for rank in range(world_size)]
+            step_avg_total.append(sum(totals) / len(totals))
+            step_avg_comm.append(sum(comms) / len(comms))
+            print(f"Step {s}: Avg Total Time: {step_avg_total[s]:.6f} sec, Avg Comm Time: {step_avg_comm[s]:.6f} sec")
+        avg_total_time = sum(step_avg_total) / len(step_avg_total)
+        avg_comm_time = sum(step_avg_comm) / len(step_avg_comm)
         # aggregate results
-        total_times = [rec["step_time"] for rec in all_ranks_times]
-        comm_times = [rec["comm_time"] for rec in all_ranks_times]
-        avg_total_time = sum(total_times) / len(total_times)
-        avg_comm_time = sum(comm_times) / len(comm_times)
+        # total_times = [rec["step_time"] for rec in all_ranks_times]
+        # comm_times = [rec["comm_time"] for rec in all_ranks_times]
+        # avg_total_time = sum(total_times) / len(total_times)
+        # avg_comm_time = sum(comm_times) / len(comm_times)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_rank_md = f"results/benchmark_naive_ddp/naive_ddp_benchmark_rank_{backend}_ws{world_size}_{timestamp}.md"
+        output_rank_md = f"results/benchmark_naive_ddp/naive_ddp_benchmark_rank_" + mode + f"_{backend}_ws{world_size}_{timestamp}.md"
         write_md(output_rank_md, all_ranks_times)
         print(f"Naive DDP Benchmark (backend={backend}, world_size={world_size}):")
         print(f"  Average Step Time: {avg_total_time:.6f} sec")
         print(f"  Average Communication Time: {avg_comm_time:.6f} sec")
+    
+    dist.barrier()
+    # --- teardown process group ---
+    teardown_process_group()
         
 
 
@@ -183,8 +207,8 @@ def write_md(path_md: str, rows: List[Dict[str, Any]]) -> None:
 
 
 # ===================
-def main():
-    os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"   # Adjust as needed
+def run():
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"   # Adjust as needed
 
     world_size = 2
     backend = "nccl"
@@ -192,14 +216,15 @@ def main():
     master_port = "29500"
 
     vocab_size = 10000
-    context_length = 128
+    context_length = 512
     global_batch_size = 8
-    dtype_str = "fp16"
+    dtype_str = "bf16"
     warmup_steps = 5
     measure_steps = 10
+    mode = "flat"  # "flat" or "indiv"
 
     mp.set_start_method("spawn", force=True)
-    mp.spawn(
+    mp.spawn(   # type: ignore
         worker,
         args=(
             world_size,
@@ -211,11 +236,13 @@ def main():
             global_batch_size,
             dtype_str,
             warmup_steps,
-            measure_steps
+            measure_steps,
+            mode  # "flat" or "indiv"
         ),
         nprocs=world_size,
         join=True
-    )
+    )  
+
 
 if __name__ == "__main__":
-    main()
+    run()
