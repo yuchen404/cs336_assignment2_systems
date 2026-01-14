@@ -1,0 +1,22 @@
+| mode                 |   rank |   step |   total_s_avg |   fwd_s_avg |   bwd_s_avg |   sync_s_avg |
+|:---------------------|-------:|-------:|--------------:|------------:|------------:|-------------:|
+| ddp_bucketed_overlap |      0 |      0 |        0.9294 |      0.1733 |      0.3222 |       0.3054 |
+| ddp_bucketed_overlap |      1 |      0 |        0.9294 |      0.1733 |      0.3222 |       0.3054 |
+| ddp_bucketed_overlap |      0 |      1 |        0.9335 |      0.1734 |      0.3225 |       0.3122 |
+| ddp_bucketed_overlap |      1 |      1 |        0.9335 |      0.1734 |      0.3225 |       0.3122 |
+| ddp_bucketed_overlap |      0 |      2 |        0.9253 |      0.1717 |      0.3251 |       0.3030 |
+| ddp_bucketed_overlap |      1 |      2 |        0.9253 |      0.1717 |      0.3251 |       0.3030 |
+| ddp_bucketed_overlap |      0 |      3 |        0.9574 |      0.1851 |      0.3313 |       0.3141 |
+| ddp_bucketed_overlap |      1 |      3 |        0.9574 |      0.1851 |      0.3313 |       0.3141 |
+| ddp_bucketed_overlap |      0 |      4 |        0.9265 |      0.1707 |      0.3226 |       0.3071 |
+| ddp_bucketed_overlap |      1 |      4 |        0.9265 |      0.1707 |      0.3226 |       0.3071 |
+| ddp_bucketed_overlap |      0 |      5 |        0.9227 |      0.1697 |      0.3230 |       0.3039 |
+| ddp_bucketed_overlap |      1 |      5 |        0.9227 |      0.1697 |      0.3230 |       0.3039 |
+| ddp_bucketed_overlap |      0 |      6 |        0.9261 |      0.1694 |      0.3227 |       0.3066 |
+| ddp_bucketed_overlap |      1 |      6 |        0.9261 |      0.1694 |      0.3227 |       0.3066 |
+| ddp_bucketed_overlap |      0 |      7 |        0.9520 |      0.1689 |      0.3241 |       0.3021 |
+| ddp_bucketed_overlap |      1 |      7 |        0.9520 |      0.1689 |      0.3241 |       0.3021 |
+| ddp_bucketed_overlap |      0 |      8 |        0.9535 |      0.1719 |      0.3167 |       0.3380 |
+| ddp_bucketed_overlap |      1 |      8 |        0.9535 |      0.1719 |      0.3167 |       0.3380 |
+| ddp_bucketed_overlap |      0 |      9 |        0.9237 |      0.1693 |      0.3264 |       0.3028 |
+| ddp_bucketed_overlap |      1 |      9 |        0.9237 |      0.1693 |      0.3264 |       0.3028 |
