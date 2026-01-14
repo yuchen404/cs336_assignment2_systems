@@ -7,6 +7,10 @@ from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 
 from typing import Iterable, Set, Tuple, List
 
+def cuda_sync_if_needed(device: torch.device) -> None:
+    if device.type == "cuda":
+        torch.cuda.synchronize(device=device)
+
 def _unique_params_by_storage(params: Iterable[nn.Parameter]) -> List[nn.Parameter]:
     """
     Return unique parameters based on their underlying storage
