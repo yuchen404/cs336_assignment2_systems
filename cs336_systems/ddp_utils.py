@@ -7,6 +7,19 @@ from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 
 from typing import Iterable, Set, Tuple, List
 
+
+# --- Distributed Setup and Teardown ---
+def setup_process_group(rank: int, world_size: int, backend: str, master_addr: str, master_port: str) -> None:
+    os.environ["MASTER_ADDR"] = master_addr
+    os.environ["MASTER_PORT"] = master_port
+    if backend == "nccl":
+        torch.cuda.set_device(rank)
+    dist.init_process_group(backend=backend, rank=rank, world_size=world_size)
+
+def teardown_process_group() -> None:
+    if dist.is_initialized():
+        dist.destroy_process_group()
+        
 def cuda_sync_if_needed(device: torch.device) -> None:
     if device.type == "cuda":
         torch.cuda.synchronize(device=device)
