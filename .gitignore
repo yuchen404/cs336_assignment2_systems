@@ -3,6 +3,9 @@ cs336-spring2024-assignment-2-submission.zip
 test_results.xml
 
 results/
+profiles/
+memory_profile/
+log/
 
 results/benchmark_ddp_overlap/*.nsys-rep
 
