@@ -26,7 +26,7 @@
 ├── pyproject.toml
 
 ```
-
+---
 
 For a full description of the assignment, see the assignment handout at
 [cs336_spring2025_assignment2_systems.pdf](./cs336_spring2025_assignment2_systems.pdf)
