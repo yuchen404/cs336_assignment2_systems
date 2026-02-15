@@ -5,7 +5,7 @@ test_results.xml
 results/
 profiles/
 memory_profile/
-log/
+log
 
 results/benchmark_ddp_overlap/*.nsys-rep
 
