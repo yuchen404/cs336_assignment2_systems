@@ -1,5 +1,33 @@
 # CS336 Spring 2025 Assignment 2: Systems
 
+## 完成代码
+``` sh
+.
+├── cs336_basics  # A python module named cs336_basics
+│   ├── __init__.py
+│   └── ... other files in the cs336_basics module, taken from assignment 1 ...
+├── cs336_systems  # TODO: code that you'll write for assignment 2 
+│   ├── __init__.py
+│   ├── benchmarking_script.py  # End-to-end enchmarking of the forward and backward passes.   
+│   ├── benchmarking_nvtx.py  # Memory profiles.
+│   ├── submit_benchmark.py  # Call benchmarking_script.py, sweep.
+│   ├── benchmarking_flash.py  # Call FlashAttention_v2.py, benchmarking script for flashattention.
+│   ├── FlashAttention_v2.py  # (1). Pure PyTorch implementation of FlashAttention-2; (2). and using Triton kernels.
+│   ├── benchmark_allreduce.py  # A simple bechmarking for all-reduce operation; Gloo + CPU, NCCL + GPU.
+│   ├── naive_dpp.py  # A simple test for naively Distributed Data Parallel (DDP) training by all-reducing individual parameter gradients after the backward pass.
+│   ├── benchmarking_naive_dpp.py  # .
+│   ├── ddp_utils.py  # Implementation of (1). DDP with communication call for each parameter; (2). DDP with single communication call for all parameter.
+│   ├── dpp_overlap.py  # Implementation of DDP, overlapping computation with communication; (1). overlap_individual_parameters; (2). overlap_bucketed_parameters.
+│   ├── benchmarking_dpp_overlap.py  # .
+│   ├── optimizer_state_sharding.py  # A simple implementation of optimizer state sharding.
+│   ├── optimizer_state_sharding_accounting.py  # accounting the peak memory usage when training language models with and without optimizer state shardin.
+│   └── .
+├── README.md
+├── pyproject.toml
+
+```
+
+
 For a full description of the assignment, see the assignment handout at
 [cs336_spring2025_assignment2_systems.pdf](./cs336_spring2025_assignment2_systems.pdf)
 

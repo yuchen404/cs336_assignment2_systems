@@ -84,7 +84,7 @@ class ShardedOptimizer(Optimizer):
 
     def step(self, closure=None, **kwargs):
         """
-        Calls the wrapped optimizer’s step() method with the provided closure and keyword arguments. After updating the parameters, synchronize with the other ranks.
+        Calls the wrapped optimizer's step() method with the provided closure and keyword arguments. After updating the parameters, synchronize with the other ranks.
         """
         if self._local_optimizer is None:
             raise RuntimeError("Local optimizer is not innitialized.")

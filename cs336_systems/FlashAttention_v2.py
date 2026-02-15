@@ -399,7 +399,7 @@ class FlashAttention2Forward_triton(torch.autograd.Function):
     @staticmethod
     def backward(ctx, dO):
         """
-        Backward pass for FlashAttention-2 using PyTorch operations.
+        Backward pass for FlashAttention-2 using PyTorch operations/Triton kernels.
         dO: (..., seq_len, d_model) gradient of output O
         Q, K, V, O are retrieved from ctx (..., seq_len, d_model)
         L: (..., seq_len) logsumexp for each query position, L_i = logsumexp_j(Q_i . K_j^T)
@@ -429,6 +429,7 @@ class FlashAttention2Forward_triton(torch.autograd.Function):
 
         # return dQ, dK, dV, None
         # raise NotImplementedError("FlashAttention2Forward_triton backward is not implemented yet.")
+
         # --- Using Triton kernels for backward ---
         Q, K, V, O, L = ctx.saved_tensors
         is_causal = ctx.is_causal
