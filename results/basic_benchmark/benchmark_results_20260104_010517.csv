@@ -1,2 +1,0 @@
-size,d_model,d_ff,num_layers,num_heads,context_length,batch_size,precision,avg_time_ms,avg_fwd_time_ms,avg_bwd_time_ms,mode
-2.7B,1024,4096,24,16,512,4,fp16,222.88555421400815,70.27625142363831,152.60930279036984,forward_backward
