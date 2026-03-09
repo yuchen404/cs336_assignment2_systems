@@ -143,7 +143,7 @@ _flash_bwd_nocausal = torch.compile(lambda Q, K, V, O, L, dO: _flash_attention_b
     
 def _flash_attention_bwd(Q, K, V, O, L, dO, is_causal: bool):
     """
-    Backward pass for FlashAttention-2 using Triton kernels.
+    Backward pass for FlashAttention-2 using pytorch.
     Q, K, V, O: (..., seq_len, d_model)
     L: (..., seq_len) logsumexp for each query position, L_i = logsumexp_j(Q_i . K_j^T)
     dO: (..., seq_len, d_model) gradient of output O
